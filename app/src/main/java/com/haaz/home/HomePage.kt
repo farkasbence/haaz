@@ -52,7 +52,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.haaz.R
 import com.haaz.player.AudioPlayer
 import com.haaz.settings.SettingsSheetUI
@@ -60,10 +60,7 @@ import com.haaz.settings.SettingsSheetUI
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePage() {
-    val appContext = LocalContext.current.applicationContext
-    val viewModel: HomeViewModel = viewModel(
-        factory = remember(appContext) { HomeViewModel.provideFactory(appContext) }
-    )
+    val viewModel: HomeViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val audioPlayer = rememberAudioPlayer(onEnded = viewModel::onPlaybackFinished)

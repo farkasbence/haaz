@@ -7,8 +7,11 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.haaz.domain.TtsModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
 
 private val Context.dataStore by preferencesDataStore(name = "tts_settings")
 
@@ -18,7 +21,10 @@ data class TtsSettings(
     val stability: Float = 0.5f
 )
 
-class SettingsRepository(private val context: Context) {
+@Singleton
+class SettingsRepository @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
 
     private val modelKey = stringPreferencesKey("model_id")
     private val speedKey = floatPreferencesKey("speed")

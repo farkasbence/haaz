@@ -1,14 +1,17 @@
 package com.haaz.data
 
 import com.haaz.BuildConfig
+import com.haaz.di.IoDispatcher
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class TextToSpeechDataSource() {
-    private val api: ElevenLabsApi = ElevenLabsApi.create()
-    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
-
+@Singleton
+class TextToSpeechDataSource @Inject constructor(
+    private val api: TextToSpeechEndpoint,
+    @IoDispatcher private val dispatcher: CoroutineDispatcher
+) {
     suspend fun generateSpeech(prompt: String, settings: TtsSettings): Result<ByteArray> = withContext(dispatcher) {
         val apiKey = BuildConfig.ELEVENLABS_API_KEY
         if (apiKey.isBlank()) {

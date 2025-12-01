@@ -1,23 +1,23 @@
 package com.haaz.home
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.haaz.data.SettingsRepository
 import com.haaz.data.TextToSpeechDataSource
 import com.haaz.data.TtsSettings
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class HomeViewModel(
-    context: Context
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    private val textToSpeechDataSource: TextToSpeechDataSource,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
-    private val textToSpeechDataSource = TextToSpeechDataSource()
-    private val settingsRepository = SettingsRepository(context.applicationContext)
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState
 
@@ -98,16 +98,6 @@ class HomeViewModel(
         }
     }
 
-    companion object {
-        // TODO: Implement dependency injection via Hilt
-        fun provideFactory(context: Context): ViewModelProvider.Factory =
-            object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return HomeViewModel(context.applicationContext) as T
-                }
-            }
-    }
 }
 
 data class HomeUiState(

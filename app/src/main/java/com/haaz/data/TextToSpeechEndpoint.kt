@@ -16,7 +16,7 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Streaming
 
-interface ElevenLabsApi {
+interface TextToSpeechEndpoint {
     @Streaming
     @Headers("Accept: audio/mpeg")
     @POST("v1/text-to-speech/{voice_id}/stream")
@@ -25,29 +25,6 @@ interface ElevenLabsApi {
         @Path("voice_id") voiceId: String,
         @Body request: TextToSpeechRequest
     ): Response<ResponseBody>
-
-    companion object {
-        fun create(): ElevenLabsApi {
-            val logger = HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BASIC
-            }
-
-            val client = OkHttpClient.Builder()
-                .addInterceptor(logger)
-                .build()
-
-            val moshi = Moshi.Builder()
-                .add(KotlinJsonAdapterFactory())
-                .build()
-
-            return Retrofit.Builder()
-                .baseUrl("https://api.elevenlabs.io/")
-                .client(client)
-                .addConverterFactory(MoshiConverterFactory.create(moshi))
-                .build()
-                .create(ElevenLabsApi::class.java)
-        }
-    }
 }
 
 data class TextToSpeechRequest(
