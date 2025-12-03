@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -26,6 +27,7 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,10 +41,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.haaz.data.TtsSettings
 import com.haaz.domain.TtsModel
+import com.haaz.domain.Voice
 
 @Composable
 fun SettingsSheetUI(
     initial: TtsSettings,
+    voices: List<Voice>,
+    isVoicesLoading: Boolean,
+    voicesError: String?,
+    onRetryVoices: () -> Unit,
     onSave: (TtsSettings) -> Unit,
     onReset: () -> Unit,
     onClose: () -> Unit
@@ -110,6 +117,76 @@ fun SettingsSheetUI(
             }
         }
 
+        Text(text = "Voice", style = MaterialTheme.typography.titleMedium)
+        when {
+            isVoicesLoading -> {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                }
+            }
+            voicesError != null -> {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = voicesError, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    OutlinedButton(onClick = onRetryVoices) {
+                        Text("Retry")
+                    }
+                }
+            }
+            voices.isEmpty() -> {
+                Text(text = "No voices available. Try again later.", style = MaterialTheme.typography.bodyMedium)
+            }
+            else -> {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    items(voices) { voice ->
+                        val selected = voice.id == draft.voiceId
+                        OutlinedCard(
+                            modifier = Modifier.size(width = 200.dp, height = 96.dp),
+                            onClick = { draft = draft.copy(voiceId = voice.id) },
+                            border = if (selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(text = voice.name, style = MaterialTheme.typography.titleMedium)
+                                    if (selected) {
+                                        Icon(
+                                            imageVector = Icons.Default.Done,
+                                            contentDescription = "Selected",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                                voice.descriptor?.let {
+                                    Text(text = it, style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // Create speed slider
         SettingsSlider(
             title = "Speed",
@@ -156,15 +233,17 @@ fun SettingsSheetUI(
     }
 }
 
-private val TtsSettingsSaver = Saver<TtsSettings, Map<String, Any>>(save = {
+private val TtsSettingsSaver = Saver<TtsSettings, Map<String, Any?>>(save = {
     mapOf(
         "model" to it.model.id,
+        "voiceId" to (it.voiceId ?: ""),
         "speed" to it.speed,
         "stability" to it.stability
     )
 }, restore = {
     TtsSettings(
         model = TtsModel.fromId(it["model"] as? String),
+        voiceId = (it["voiceId"] as? String)?.takeIf { id -> id.isNotEmpty() },
         speed = (it["speed"] as? Float) ?: 1.0f,
         stability = (it["stability"] as? Float) ?: 0.5f
     )

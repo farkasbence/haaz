@@ -17,6 +17,7 @@ private val Context.dataStore by preferencesDataStore(name = "tts_settings")
 
 data class TtsSettings(
     val model: TtsModel = TtsModel.MultilingualV2,
+    val voiceId: String? = null,
     val speed: Float = 1.0f,
     val stability: Float = 0.5f
 )
@@ -27,12 +28,14 @@ class SettingsRepository @Inject constructor(
 ) {
 
     private val modelKey = stringPreferencesKey("model_id")
+    private val voiceKey = stringPreferencesKey("voice_id")
     private val speedKey = floatPreferencesKey("speed")
     private val stabilityKey = floatPreferencesKey("stability")
 
     val settings: Flow<TtsSettings> = context.dataStore.data.map { prefs ->
         TtsSettings(
             model = TtsModel.fromId(prefs[modelKey]),
+            voiceId = prefs[voiceKey],
             speed = prefs[speedKey] ?: 1.0f,
             stability = prefs[stabilityKey] ?: 0.5f,
         )
@@ -41,6 +44,7 @@ class SettingsRepository @Inject constructor(
     suspend fun save(settings: TtsSettings) {
         context.dataStore.edit { prefs: MutablePreferences ->
             prefs[modelKey] = settings.model.id
+            settings.voiceId?.let { prefs[voiceKey] = it } ?: prefs.remove(voiceKey)
             prefs[speedKey] = settings.speed
             prefs[stabilityKey] = settings.stability
         }

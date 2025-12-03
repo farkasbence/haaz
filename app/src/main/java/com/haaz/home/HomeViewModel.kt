@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.haaz.data.SettingsRepository
 import com.haaz.data.TextToSpeechDataSource
 import com.haaz.data.TtsSettings
+import com.haaz.domain.Voice
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,6 +36,7 @@ class HomeViewModel @Inject constructor(
 
     fun onToggleSettings(open: Boolean) {
         _uiState.update { it.copy(isSettingsSheetOpen = open) }
+        if (open) loadVoicesIfNeeded()
     }
 
     fun generateSpeech() {
@@ -98,6 +100,27 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun refreshVoices() {
+        viewModelScope.launch { loadVoices(force = true) }
+    }
+
+    private fun loadVoicesIfNeeded() {
+        val state = _uiState.value
+        if (state.voices.isNotEmpty() || state.isVoicesLoading) return
+        viewModelScope.launch { loadVoices(force = false) }
+    }
+
+    private suspend fun loadVoices(force: Boolean) {
+        _uiState.update { it.copy(isVoicesLoading = true, voicesError = null) }
+        val result = textToSpeechDataSource.fetchVoices(force)
+        _uiState.update { state ->
+            result.fold(
+                onSuccess = { voices -> state.copy(voices = voices, isVoicesLoading = false) },
+                onFailure = { error -> state.copy(isVoicesLoading = false, voicesError = error.message ?: "Unable to load voices") }
+            )
+        }
+    }
+
 }
 
 data class HomeUiState(
@@ -106,7 +129,10 @@ data class HomeUiState(
     val playback: PlaybackState? = null,
     val errorMessage: String? = null,
     val isSettingsSheetOpen: Boolean = false,
-    val settings: TtsSettings = TtsSettings()
+    val settings: TtsSettings = TtsSettings(),
+    val voices: List<Voice> = emptyList(),
+    val isVoicesLoading: Boolean = false,
+    val voicesError: String? = null
 ) {
     val canGenerate: Boolean get() = promptText.isNotBlank() && !isGenerating
 }

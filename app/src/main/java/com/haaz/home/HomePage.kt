@@ -173,15 +173,11 @@ private fun HomePageUI(uiState: HomeUiState, snackbarHostState: SnackbarHostStat
                 ) {
                     Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings")
                 }
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.weight(1f))
                 Button(
                     onClick = { viewModel.generateSpeech() },
                     enabled = uiState.canGenerate,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = MaterialTheme.colorScheme.onSurface
-                    ),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                    colors = ButtonDefaults.buttonColors()
                 ) {
                     if (uiState.isGenerating) {
                         CircularProgressIndicator(
@@ -202,6 +198,10 @@ private fun HomePageUI(uiState: HomeUiState, snackbarHostState: SnackbarHostStat
                 ) {
                     SettingsSheetUI(
                         initial = uiState.settings,
+                        voices = uiState.voices,
+                        isVoicesLoading = uiState.isVoicesLoading,
+                        voicesError = uiState.voicesError,
+                        onRetryVoices = { viewModel.refreshVoices() },
                         onSave = { newSettings ->
                             viewModel.saveSettings(newSettings)
                             viewModel.onToggleSettings(false)

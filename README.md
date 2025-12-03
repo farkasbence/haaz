@@ -20,6 +20,6 @@ ELEVENLABS_API_KEY=your_api_key_here
 - DataStore for settings persistence
 
 ## Screenshots
-| Home | Playback | Settings |
-| --- | --- | --- |
+| Home | Playback | Settings sheet                                 |
+| --- | --- |------------------------------------------------|
 | ![home.png](docs/screenshots/home.png) | ![playback.png](docs/screenshots/playback.png) | ![settings.png](docs/screenshots/settings.png) |
