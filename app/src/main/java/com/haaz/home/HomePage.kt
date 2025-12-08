@@ -3,6 +3,7 @@
 package com.haaz.home
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +49,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -256,11 +258,13 @@ private fun PlaybackBar(
         playback.isPlaying -> "Playing"
         else -> "Ready to play"
     }
+    val barColor = MaterialTheme.colorScheme.surfaceVariant
+    val buttonColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f).compositeOver(barColor)
 
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = barColor,
         tonalElevation = 4.dp
     ) {
         Row(
@@ -273,12 +277,26 @@ private fun PlaybackBar(
                 Text(text = statusText, style = MaterialTheme.typography.bodySmall)
             }
             IconButton(onClick = { if (enabled) onTogglePlayback() }, enabled = enabled) {
-                val icon = if (playback?.isPlaying == true) Icons.Default.Pause else Icons.Default.PlayArrow
-                val description = if (playback?.isPlaying == true) "Pause" else "Play"
-                Icon(imageVector = icon, contentDescription = description, Modifier.size(36.dp))
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(color = buttonColor, shape = RoundedCornerShape(percent = 50)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    val icon = if (playback?.isPlaying == true) Icons.Default.Pause else Icons.Default.PlayArrow
+                    val description = if (playback?.isPlaying == true) "Pause" else "Play"
+                    Icon(imageVector = icon, contentDescription = description)
+                }
             }
             IconButton(onClick = { if (enabled) onClose() }, enabled = enabled) {
-                Icon(imageVector = Icons.Default.Close, contentDescription = "Close", Modifier.size(24.dp))
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(color = buttonColor, shape = RoundedCornerShape(percent = 50)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
+                }
             }
         }
     }
