@@ -2,6 +2,7 @@ package com.haaz.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.haaz.data.HistoryRepository
 import com.haaz.data.SettingsRepository
 import com.haaz.data.TextToSpeechDataSource
 import com.haaz.data.TtsSettings
@@ -17,7 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val textToSpeechDataSource: TextToSpeechDataSource,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val historyRepository: HistoryRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState
@@ -47,6 +49,9 @@ class HomeViewModel @Inject constructor(
             _uiState.update { it.copy(isGenerating = true, errorMessage = null, playback = null) }
 
             val result = textToSpeechDataSource.generateSpeech(prompt, _uiState.value.settings)
+            if (result.isSuccess) {
+                historyRepository.addEntry(prompt)
+            }
             _uiState.update {
                 result.fold(
                     onSuccess = { audio ->
@@ -86,6 +91,10 @@ class HomeViewModel @Inject constructor(
 
     fun dismissError() {
         _uiState.update { it.copy(errorMessage = null) }
+    }
+
+    fun onHistorySelected(query: String) {
+        _uiState.update { it.copy(promptText = query, errorMessage = null) }
     }
 
     fun saveSettings(settings: TtsSettings) {

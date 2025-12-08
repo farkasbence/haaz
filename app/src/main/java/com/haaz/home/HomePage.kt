@@ -2,9 +2,9 @@
 
 package com.haaz.home
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,7 +21,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -30,7 +31,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -59,11 +59,21 @@ import com.haaz.settings.SettingsSheetUI
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomePage() {
+fun HomePage(
+    onOpenHistory: () -> Unit,
+    selectedHistory: String?,
+    onHistoryConsumed: () -> Unit
+) {
     val viewModel: HomeViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val audioPlayer = rememberAudioPlayer(onEnded = viewModel::onPlaybackFinished)
+
+    LaunchedEffect(selectedHistory) {
+        val history = selectedHistory ?: return@LaunchedEffect
+        viewModel.onHistorySelected(history)
+        onHistoryConsumed()
+    }
 
     LaunchedEffect(uiState.playback) {
         val playback = uiState.playback
@@ -92,11 +102,16 @@ fun HomePage() {
         }
     }
 
-    HomePageUI(uiState, snackbarHostState, viewModel)
+    HomePageUI(uiState, snackbarHostState, viewModel, onOpenHistory)
 }
 
 @Composable
-private fun HomePageUI(uiState: HomeUiState, snackbarHostState: SnackbarHostState, viewModel: HomeViewModel) {
+private fun HomePageUI(
+    uiState: HomeUiState,
+    snackbarHostState: SnackbarHostState,
+    viewModel: HomeViewModel,
+    onOpenHistory: () -> Unit
+) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     Scaffold(
@@ -118,19 +133,35 @@ private fun HomePageUI(uiState: HomeUiState, snackbarHostState: SnackbarHostStat
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.speech_bubble),
-                        contentDescription = null,
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "Haaz", style = MaterialTheme.typography.headlineLarge)
+                    IconButton(
+                        onClick = onOpenHistory,
+                        modifier = Modifier.align(Alignment.CenterStart)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.History,
+                            contentDescription = "History",
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.align(Alignment.Center),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.speech_bubble),
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Haaz", style = MaterialTheme.typography.headlineSmall)
+                    }
                 }
-                Spacer(modifier = Modifier.height(12.dp))
                 OutlinedTextField(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -163,15 +194,11 @@ private fun HomePageUI(uiState: HomeUiState, snackbarHostState: SnackbarHostStat
                 horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                OutlinedButton(
+                Button(
                     onClick = { viewModel.onToggleSettings(true) },
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = MaterialTheme.colorScheme.onSurface
-                    ),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                    colors = ButtonDefaults.buttonColors(),
                 ) {
-                    Icon(imageVector = Icons.Default.Settings, contentDescription = "Settings")
+                    Icon(imageVector = Icons.Default.Tune, contentDescription = "Settings")
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 Button(
@@ -248,10 +275,10 @@ private fun PlaybackBar(
             IconButton(onClick = { if (enabled) onTogglePlayback() }, enabled = enabled) {
                 val icon = if (playback?.isPlaying == true) Icons.Default.Pause else Icons.Default.PlayArrow
                 val description = if (playback?.isPlaying == true) "Pause" else "Play"
-                Icon(imageVector = icon, contentDescription = description)
+                Icon(imageVector = icon, contentDescription = description, Modifier.size(36.dp))
             }
             IconButton(onClick = { if (enabled) onClose() }, enabled = enabled) {
-                Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
+                Icon(imageVector = Icons.Default.Close, contentDescription = "Close", Modifier.size(24.dp))
             }
         }
     }

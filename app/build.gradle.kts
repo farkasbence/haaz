@@ -75,6 +75,7 @@ dependencies {
 
     implementation(libs.coil.kt.compose)
     implementation(libs.coroutines.android)
+    implementation(libs.androidx.datastore)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
