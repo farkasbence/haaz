@@ -2,6 +2,12 @@
 
 package com.haaz.home
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -183,13 +189,26 @@ private fun HomePageUI(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            PlaybackBar(
-                playback = uiState.playback,
-                onTogglePlayback = { viewModel.onTogglePlayback() },
-                onClose = { viewModel.onClosePlayback() }
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
+            AnimatedVisibility(
+                visible = uiState.playback != null,
+                enter = slideInVertically(
+                    animationSpec = tween(durationMillis = 200),
+                    initialOffsetY = { fullHeight -> fullHeight }
+                ) + fadeIn(animationSpec = tween(durationMillis = 200)),
+                exit = slideOutVertically(
+                    animationSpec = tween(durationMillis = 200),
+                    targetOffsetY = { fullHeight -> fullHeight }
+                ) + fadeOut(animationSpec = tween(durationMillis = 200))
+            ) {
+                Column {
+                    PlaybackBar(
+                        playback = uiState.playback,
+                        onTogglePlayback = { viewModel.onTogglePlayback() },
+                        onClose = { viewModel.onClosePlayback() }
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
