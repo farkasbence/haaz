@@ -1,6 +1,6 @@
 package com.haaz.di
 
-import com.haaz.network.TextToSpeechEndpoint
+import com.haaz.data.network.TextToSpeechEndpoint
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module

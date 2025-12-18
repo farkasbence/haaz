@@ -1,4 +1,4 @@
-package com.haaz.settings
+package com.haaz.ui.settings
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement

@@ -1,4 +1,4 @@
-package com.haaz.history
+package com.haaz.ui.history
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box

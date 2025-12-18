@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package com.haaz.home
+package com.haaz.ui.home
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -36,7 +36,6 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.History
-import androidx.compose.material.icons.sharp.CameraAlt
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -74,7 +73,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.haaz.R
 import com.haaz.player.AudioPlayer
 import com.haaz.scanner.createImageUri
-import com.haaz.settings.SettingsSheetUI
+import com.haaz.ui.settings.SettingsSheetUI
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

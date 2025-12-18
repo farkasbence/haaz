@@ -1,4 +1,4 @@
-package com.haaz.history
+package com.haaz.ui.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

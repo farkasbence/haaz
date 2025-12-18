@@ -1,10 +1,10 @@
-package com.haaz.home
+package com.haaz.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.haaz.data.HistoryRepository
 import com.haaz.data.SettingsRepository
-import com.haaz.data.TextToSpeechDataSource
+import com.haaz.data.TextToSpeechRepository
 import com.haaz.data.TtsSettings
 import com.haaz.domain.Voice
 import com.haaz.scanner.TextScanner
@@ -19,7 +19,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val textToSpeechDataSource: TextToSpeechDataSource,
+    private val textToSpeechRepository: TextToSpeechRepository,
     private val settingsRepository: SettingsRepository,
     private val historyRepository: HistoryRepository,
     private val textScanner: TextScanner
@@ -51,7 +51,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isGenerating = true, errorMessage = null, playback = null) }
 
-            val result = textToSpeechDataSource.generateSpeech(prompt, _uiState.value.settings)
+            val result = textToSpeechRepository.generateSpeech(prompt, _uiState.value.settings)
             if (result.isSuccess) {
                 historyRepository.addEntry(prompt)
             }
@@ -128,7 +128,7 @@ class HomeViewModel @Inject constructor(
 
     private suspend fun loadVoices(force: Boolean) {
         _uiState.update { it.copy(isVoicesLoading = true, voicesError = null) }
-        val result = textToSpeechDataSource.fetchVoices(force)
+        val result = textToSpeechRepository.fetchVoices(force)
         _uiState.update { state ->
             result.fold(
                 onSuccess = { voices -> state.copy(voices = voices, isVoicesLoading = false) },

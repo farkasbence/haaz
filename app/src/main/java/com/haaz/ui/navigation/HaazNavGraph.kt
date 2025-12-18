@@ -1,4 +1,4 @@
-package com.haaz.navigation
+package com.haaz.ui.navigation
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
@@ -8,8 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.haaz.history.HistoryPage
-import com.haaz.home.HomePage
+import com.haaz.ui.history.HistoryPage
+import com.haaz.ui.home.HomePage
 
 @Composable
 fun HaazNavGraph() {

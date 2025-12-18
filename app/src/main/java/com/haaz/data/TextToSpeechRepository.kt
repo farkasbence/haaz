@@ -3,9 +3,9 @@ package com.haaz.data
 import com.haaz.BuildConfig
 import com.haaz.di.IoDispatcher
 import com.haaz.domain.Voice
-import com.haaz.network.TextToSpeechEndpoint
-import com.haaz.network.TextToSpeechRequest
-import com.haaz.network.VoiceSettings
+import com.haaz.data.network.TextToSpeechEndpoint
+import com.haaz.data.network.TextToSpeechRequest
+import com.haaz.data.network.VoiceSettings
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
@@ -13,7 +13,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class TextToSpeechDataSource @Inject constructor(
+class TextToSpeechRepository @Inject constructor(
     private val api: TextToSpeechEndpoint,
     @IoDispatcher private val dispatcher: CoroutineDispatcher
 ) {

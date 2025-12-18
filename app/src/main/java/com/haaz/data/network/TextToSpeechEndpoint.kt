@@ -1,4 +1,4 @@
-package com.haaz.network
+package com.haaz.data.network
 
 import com.squareup.moshi.Json
 import okhttp3.ResponseBody
