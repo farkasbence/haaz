@@ -7,19 +7,22 @@ import com.haaz.data.SettingsRepository
 import com.haaz.data.TextToSpeechDataSource
 import com.haaz.data.TtsSettings
 import com.haaz.domain.Voice
+import com.haaz.scanner.TextScanner
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import android.net.Uri
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val textToSpeechDataSource: TextToSpeechDataSource,
     private val settingsRepository: SettingsRepository,
-    private val historyRepository: HistoryRepository
+    private val historyRepository: HistoryRepository,
+    private val textScanner: TextScanner
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState
@@ -93,6 +96,10 @@ class HomeViewModel @Inject constructor(
         _uiState.update { it.copy(errorMessage = null) }
     }
 
+    fun onScanError(message: String) {
+        _uiState.update { it.copy(errorMessage = message, isScanning = false) }
+    }
+
     fun onHistorySelected(query: String) {
         _uiState.update { it.copy(promptText = query, errorMessage = null) }
     }
@@ -130,6 +137,33 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun onImageCaptured(uri: Uri) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isScanning = true, errorMessage = null) }
+            val result = textScanner.scanText(uri)
+            _uiState.update { state ->
+                result.fold(
+                    onSuccess = { text ->
+                        state.copy(
+                            isScanning = false,
+                            promptText = text,
+                            errorMessage = null
+                        )
+                    },
+                    onFailure = { error ->
+                        state.copy(
+                            isScanning = false,
+                            errorMessage = error.message ?: "Unable to read text from image"
+                        )
+                    }
+                )
+            }
+        }
+    }
+
+    fun onScanCancelled() {
+        _uiState.update { it.copy(isScanning = false) }
+    }
 }
 
 data class HomeUiState(
@@ -141,9 +175,10 @@ data class HomeUiState(
     val settings: TtsSettings = TtsSettings(),
     val voices: List<Voice> = emptyList(),
     val isVoicesLoading: Boolean = false,
-    val voicesError: String? = null
+    val voicesError: String? = null,
+    val isScanning: Boolean = false
 ) {
-    val canGenerate: Boolean get() = promptText.isNotBlank() && !isGenerating
+    val canGenerate: Boolean get() = promptText.isNotBlank() && !isGenerating && !isScanning
 }
 
 data class PlaybackState(

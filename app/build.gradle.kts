@@ -89,6 +89,7 @@ dependencies {
     implementation(libs.moshi.kotlin)
 
     implementation(libs.media3.exoplayer)
+    implementation(libs.mlkit.text.recognition)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

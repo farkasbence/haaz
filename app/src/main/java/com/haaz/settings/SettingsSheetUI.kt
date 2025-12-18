@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -13,12 +14,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +41,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.haaz.data.TtsSettings
 import com.haaz.domain.TtsModel
@@ -84,33 +88,33 @@ fun SettingsSheetUI(
             items(modelOptions) { option ->
                 val selected = option == draft.model
                 OutlinedCard(
-                    modifier = Modifier.size(width = 200.dp, height = 140.dp),
-                    onClick = { draft = draft.copy(model = option) },
-                    border = if (selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else BorderStroke(
-                        1.dp,
+                    modifier = Modifier.size(width = 200.dp, height = 130.dp),
+                        onClick = { draft = draft.copy(model = option) },
+                        border = if (selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else BorderStroke(
+                            1.dp,
                         MaterialTheme.colorScheme.primary
                     )
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             Text(text = option.badge, style = MaterialTheme.typography.labelSmall)
-                            if (selected) {
-                                Icon(
-                                    imageVector = Icons.Default.Done,
-                                    contentDescription = "Selected",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(text = option.title, style = MaterialTheme.typography.titleMedium)
+                                Text(text = option.subtitle, style = MaterialTheme.typography.bodyMedium)
+                                Text(text = option.quality, style = MaterialTheme.typography.labelSmall)
                             }
                         }
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(text = option.title, style = MaterialTheme.typography.titleMedium)
-                            Text(text = option.subtitle, style = MaterialTheme.typography.bodyMedium)
-                            Text(text = option.quality, style = MaterialTheme.typography.labelSmall)
+                        if (selected) {
+                            SelectionCheck(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(8.dp)
+                            )
                         }
                     }
                 }
@@ -157,28 +161,29 @@ fun SettingsSheetUI(
                                 MaterialTheme.colorScheme.primary
                             )
                         ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(12.dp),
-                                verticalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(12.dp),
+                                    verticalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text(text = voice.name, style = MaterialTheme.typography.titleMedium)
-                                    if (selected) {
-                                        Icon(
-                                            imageVector = Icons.Default.Done,
-                                            contentDescription = "Selected",
-                                            tint = MaterialTheme.colorScheme.primary
-                                        )
+                                    Text(
+                                        text = voice.name,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    voice.descriptor?.let {
+                                        Text(text = it, style = MaterialTheme.typography.bodySmall)
                                     }
                                 }
-                                voice.descriptor?.let {
-                                    Text(text = it, style = MaterialTheme.typography.bodySmall)
+                                if (selected) {
+                                    SelectionCheck(
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .padding(8.dp)
+                                    )
                                 }
                             }
                         }
@@ -229,6 +234,25 @@ fun SettingsSheetUI(
             ) {
                 Text("Save")
             }
+        }
+    }
+}
+
+@Composable
+private fun SelectionCheck(modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier.size(22.dp),
+        shape = RoundedCornerShape(percent = 50),
+        color = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+        tonalElevation = 2.dp
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = Icons.Default.Done,
+                contentDescription = "Selected",
+                modifier = Modifier.size(16.dp)
+            )
         }
     }
 }

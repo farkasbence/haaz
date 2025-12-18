@@ -2,10 +2,15 @@
 
 package com.haaz.home
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
@@ -29,7 +34,9 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.outlined.CameraAlt
 import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.sharp.CameraAlt
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -51,7 +58,9 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -60,9 +69,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.haaz.R
 import com.haaz.player.AudioPlayer
+import com.haaz.scanner.createImageUri
 import com.haaz.settings.SettingsSheetUI
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,6 +87,32 @@ fun HomePage(
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val audioPlayer = rememberAudioPlayer(onEnded = viewModel::onPlaybackFinished)
+    val context = LocalContext.current
+    var pendingImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        val uri = pendingImageUri
+        if (success && uri != null) {
+            viewModel.onImageCaptured(uri)
+        } else {
+            viewModel.onScanCancelled()
+        }
+        pendingImageUri = null
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        val uri = pendingImageUri
+        if (granted && uri != null) {
+            takePictureLauncher.launch(uri)
+        } else {
+            pendingImageUri = null
+            viewModel.onScanError("Camera permission denied")
+        }
+    }
 
     LaunchedEffect(selectedHistory) {
         val history = selectedHistory ?: return@LaunchedEffect
@@ -110,7 +147,28 @@ fun HomePage(
         }
     }
 
-    HomePageUI(uiState, snackbarHostState, viewModel, onOpenHistory)
+    HomePageUI(
+        uiState = uiState,
+        snackbarHostState = snackbarHostState,
+        viewModel = viewModel,
+        onOpenHistory = onOpenHistory,
+        onOpenCamera = {
+            val uri = createImageUri(context) ?: run {
+                viewModel.onScanError("Unable to open camera")
+                return@HomePageUI
+            }
+            pendingImageUri = uri
+            if (ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.CAMERA
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                takePictureLauncher.launch(uri)
+            } else {
+                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
+    )
 }
 
 @Composable
@@ -118,7 +176,8 @@ private fun HomePageUI(
     uiState: HomeUiState,
     snackbarHostState: SnackbarHostState,
     viewModel: HomeViewModel,
-    onOpenHistory: () -> Unit
+    onOpenHistory: () -> Unit,
+    onOpenCamera: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -153,7 +212,17 @@ private fun HomePageUI(
                         Icon(
                             imageVector = Icons.Outlined.History,
                             contentDescription = "History",
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                    IconButton(
+                        onClick = onOpenCamera,
+                        modifier = Modifier.align(Alignment.CenterEnd)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.CameraAlt,
+                            contentDescription = "Scan text",
+                            modifier = Modifier.size(28.dp)
                         )
                     }
                     Row(
@@ -177,7 +246,7 @@ private fun HomePageUI(
                     value = uiState.promptText,
                     onValueChange = viewModel::onPromptChange,
                     placeholder = { Text("Enter text-to-speech prompt…") },
-                    enabled = !uiState.isGenerating,
+                    enabled = !uiState.isGenerating && !uiState.isScanning,
                     minLines = 6,
                     shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -187,6 +256,22 @@ private fun HomePageUI(
                     )
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+                AnimatedVisibility(visible = uiState.isScanning) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Scanning image…")
+                    }
+                }
             }
 
             AnimatedVisibility(
