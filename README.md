@@ -18,6 +18,7 @@ ELEVENLABS_API_KEY=your_api_key_here
 
 ## Tech Stack
 - Kotlin, Jetpack Compose, Material3
+- Hilt for dependency injection
 - Retrofit/OkHttp
 - [ElevenLabs TTS API](https://elevenlabs.io/docs/api-reference/text-to-speech/stream)
 - Media3 ExoPlayer for playback
