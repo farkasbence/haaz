@@ -21,7 +21,7 @@ ELEVENLABS_API_KEY=your_api_key_here
 - Hilt for dependency injection
 - Retrofit/OkHttp
 - [ElevenLabs TTS API](https://elevenlabs.io/docs/api-reference/text-to-speech/stream)
-- Media3 ExoPlayer for playback
+- Media3 ExoPlayer (with MediaSessionService) for playback
 - DataStore for settings persistence
 - MLKit for on device image-to-text detection
 

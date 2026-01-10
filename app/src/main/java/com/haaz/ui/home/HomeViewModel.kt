@@ -7,7 +7,7 @@ import com.haaz.data.SettingsRepository
 import com.haaz.data.TextToSpeechRepository
 import com.haaz.data.TtsSettings
 import com.haaz.domain.Voice
-import com.haaz.scanner.TextScanner
+import com.haaz.domain.scanner.TextScanner
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -92,6 +92,17 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun onPlayerStateChanged(isPlaying: Boolean) {
+        _uiState.update { state ->
+            val current = state.playback ?: return@update state
+            if (current.isPlaying == isPlaying) state else state.copy(
+                playback = current.copy(
+                    isPlaying = isPlaying
+                )
+            )
+        }
+    }
+
     fun dismissError() {
         _uiState.update { it.copy(errorMessage = null) }
     }
@@ -132,7 +143,12 @@ class HomeViewModel @Inject constructor(
         _uiState.update { state ->
             result.fold(
                 onSuccess = { voices -> state.copy(voices = voices, isVoicesLoading = false) },
-                onFailure = { error -> state.copy(isVoicesLoading = false, voicesError = error.message ?: "Unable to load voices") }
+                onFailure = { error ->
+                    state.copy(
+                        isVoicesLoading = false,
+                        voicesError = error.message ?: "Unable to load voices"
+                    )
+                }
             )
         }
     }

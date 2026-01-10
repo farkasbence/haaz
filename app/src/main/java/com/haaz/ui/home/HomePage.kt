@@ -59,6 +59,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,9 +72,10 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.haaz.R
-import com.haaz.player.AudioPlayer
-import com.haaz.scanner.createImageUri
+import com.haaz.domain.player.PlaybackController
+import com.haaz.domain.scanner.createImageUri
 import com.haaz.ui.settings.SettingsSheetUI
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,7 +87,10 @@ fun HomePage(
     val viewModel: HomeViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val audioPlayer = rememberAudioPlayer(onEnded = viewModel::onPlaybackFinished)
+    val playbackController = rememberPlaybackController(
+        onEnded = viewModel::onPlaybackFinished,
+        onPlayerStateChanged = viewModel::onPlayerStateChanged
+    )
     val context = LocalContext.current
     var pendingImageUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -119,15 +124,15 @@ fun HomePage(
         onHistoryConsumed()
     }
 
-    LaunchedEffect(uiState.playback) {
+    LaunchedEffect(uiState.playback?.audioData) {
         val playback = uiState.playback
         if (playback == null) {
-            audioPlayer.clear()
+            playbackController.clear()
             return@LaunchedEffect
         }
 
         runCatching {
-            audioPlayer.setAudioData(playback.audioData, playback.isPlaying)
+            playbackController.setAudioData(playback.audioData, playback.isPlaying)
         }.onFailure { throwable ->
             snackbarHostState.showSnackbar(throwable.message ?: "Unable to start playback")
             viewModel.onClosePlayback()
@@ -136,7 +141,7 @@ fun HomePage(
 
     LaunchedEffect(uiState.playback?.isPlaying) {
         val playback = uiState.playback ?: return@LaunchedEffect
-        audioPlayer.setPlaying(playback.isPlaying)
+        playbackController.setPlaying(playback.isPlaying)
     }
 
     uiState.errorMessage?.let { message ->
@@ -406,11 +411,15 @@ private fun PlaybackBar(
 }
 
 @Composable
-private fun rememberAudioPlayer(onEnded: () -> Unit): AudioPlayer {
+private fun rememberPlaybackController(
+    onEnded: () -> Unit,
+    onPlayerStateChanged: (Boolean) -> Unit
+): PlaybackController {
     val context = LocalContext.current
-    val player = remember { AudioPlayer(context, onEnded) }
-    DisposableEffect(player) {
-        onDispose { player.release() }
+    val scope = rememberCoroutineScope()
+    val controller = remember { PlaybackController(context, onEnded, onPlayerStateChanged) }
+    DisposableEffect(controller) {
+        onDispose { scope.launch { controller.release() } }
     }
-    return player
+    return controller
 }

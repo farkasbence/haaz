@@ -1,4 +1,4 @@
-package com.haaz.scanner
+package com.haaz.domain.scanner
 
 import android.content.Context
 import android.net.Uri

@@ -89,6 +89,8 @@ dependencies {
     implementation(libs.moshi.kotlin)
 
     implementation(libs.media3.exoplayer)
+    implementation(libs.media3.session)
+    implementation(libs.media3.ui)
     implementation(libs.mlkit.text.recognition)
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
