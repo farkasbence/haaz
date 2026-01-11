@@ -1,6 +1,6 @@
 package com.haaz.ui.settings
 
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,7 +26,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -41,6 +40,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.haaz.data.TtsSettings
@@ -64,6 +65,8 @@ fun SettingsSheetUI(
 
     val modelOptions = remember { TtsModel.entries.toList() }
     val speedTargets = remember { listOf(0.8f, 1.0f, 1.2f) }
+    val cardShape = RoundedCornerShape(16.dp)
+    val cardColor = Color.White
 
     Column(
         modifier = Modifier
@@ -87,13 +90,15 @@ fun SettingsSheetUI(
         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             items(modelOptions) { option ->
                 val selected = option == draft.model
-                OutlinedCard(
-                    modifier = Modifier.size(width = 200.dp, height = 130.dp),
-                        onClick = { draft = draft.copy(model = option) },
-                        border = if (selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else BorderStroke(
-                            1.dp,
-                        MaterialTheme.colorScheme.primary
-                    )
+                val borderColor = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent
+                Surface(
+                    modifier = Modifier
+                        .size(width = 200.dp, height = 130.dp)
+                        .shadow(elevation = 6.dp, shape = cardShape, clip = false)
+                        .border(width = if (selected) 2.dp else 0.dp, color = borderColor, shape = cardShape),
+                    onClick = { draft = draft.copy(model = option) },
+                    color = cardColor,
+                    shape = cardShape
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
                         Column(
@@ -153,13 +158,15 @@ fun SettingsSheetUI(
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(voices) { voice ->
                         val selected = voice.id == draft.voiceId
-                        OutlinedCard(
-                            modifier = Modifier.size(width = 200.dp, height = 96.dp),
+                        val borderColor = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent
+                        Surface(
+                            modifier = Modifier
+                                .size(width = 200.dp, height = 96.dp)
+                                .shadow(elevation = 6.dp, shape = cardShape, clip = false)
+                                .border(width = if (selected) 2.dp else 0.dp, color = borderColor, shape = cardShape),
                             onClick = { draft = draft.copy(voiceId = voice.id) },
-                            border = if (selected) BorderStroke(3.dp, MaterialTheme.colorScheme.primary) else BorderStroke(
-                                1.dp,
-                                MaterialTheme.colorScheme.primary
-                            )
+                            color = cardColor,
+                            shape = cardShape
                         ) {
                             Box(modifier = Modifier.fillMaxSize()) {
                                 Column(
@@ -224,7 +231,10 @@ fun SettingsSheetUI(
                     onReset()
                     draft = TtsSettings()
                 },
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color.White,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                )
             ) {
                 Text("Reset")
             }
