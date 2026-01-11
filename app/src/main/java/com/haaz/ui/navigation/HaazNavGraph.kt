@@ -18,23 +18,45 @@ fun HaazNavGraph() {
         NavHost(navController = navController, startDestination = "home") {
             composable("home") { backStackEntry ->
                 val savedStateHandle = backStackEntry.savedStateHandle
-                val selectedHistory =
-                    savedStateHandle.getStateFlow<String?>("selected_history", null)
+                val selectedPrompt =
+                    savedStateHandle.getStateFlow<String?>("selected_history_prompt", null)
+                        .collectAsState().value
+                val selectedClipFileName =
+                    savedStateHandle.getStateFlow<String?>("selected_history_clip", null)
                         .collectAsState().value
 
                 HomePage(
                     onOpenHistory = { navController.navigate("history") },
-                    selectedHistory = selectedHistory,
-                    onHistoryConsumed = { savedStateHandle["selected_history"] = null }
+                    selectedHistoryPrompt = selectedPrompt,
+                    selectedClipFileName = selectedClipFileName,
+                    onHistoryConsumed = {
+                        savedStateHandle["selected_history_prompt"] = null
+                        savedStateHandle["selected_history_clip"] = null
+                    }
                 )
             }
             composable("history") {
                 HistoryPage(
                     onBack = { navController.popBackStack() },
-                    onQuerySelected = { query ->
+                    onPromptSelected = { query ->
                         navController.previousBackStackEntry?.savedStateHandle?.set(
-                            "selected_history",
+                            "selected_history_prompt",
                             query
+                        )
+                        navController.previousBackStackEntry?.savedStateHandle?.set(
+                            "selected_history_clip",
+                            null
+                        )
+                        navController.popBackStack()
+                    },
+                    onClipSelected = { clip ->
+                        navController.previousBackStackEntry?.savedStateHandle?.set(
+                            "selected_history_prompt",
+                            clip.prompt
+                        )
+                        navController.previousBackStackEntry?.savedStateHandle?.set(
+                            "selected_history_clip",
+                            clip.fileName
                         )
                         navController.popBackStack()
                     }

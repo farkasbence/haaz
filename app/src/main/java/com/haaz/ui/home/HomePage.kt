@@ -77,13 +77,15 @@ import com.haaz.R
 import com.haaz.domain.player.PlaybackController
 import com.haaz.domain.scanner.createImageUri
 import com.haaz.ui.settings.SettingsSheetUI
+import java.io.File
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomePage(
     onOpenHistory: () -> Unit,
-    selectedHistory: String?,
+    selectedHistoryPrompt: String?,
+    selectedClipFileName: String?,
     onHistoryConsumed: () -> Unit
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
@@ -120,13 +122,18 @@ fun HomePage(
         }
     }
 
-    LaunchedEffect(selectedHistory) {
-        val history = selectedHistory ?: return@LaunchedEffect
+    LaunchedEffect(selectedHistoryPrompt, selectedClipFileName) {
+        if (selectedClipFileName != null) {
+            viewModel.onClipSelected(selectedHistoryPrompt.orEmpty(), selectedClipFileName)
+            onHistoryConsumed()
+            return@LaunchedEffect
+        }
+        val history = selectedHistoryPrompt ?: return@LaunchedEffect
         viewModel.onHistorySelected(history)
         onHistoryConsumed()
     }
 
-    LaunchedEffect(uiState.playback?.audioData) {
+    LaunchedEffect(uiState.playback?.audioData, uiState.playback?.audioFilePath) {
         val playback = uiState.playback
         if (playback == null) {
             playbackController.clear()
@@ -134,7 +141,10 @@ fun HomePage(
         }
 
         runCatching {
-            playbackController.setAudioData(playback.audioData, playback.isPlaying)
+            when {
+                playback.audioData != null -> playbackController.setAudioData(playback.audioData, playback.isPlaying)
+                playback.audioFilePath != null -> playbackController.setAudioFile(File(playback.audioFilePath), playback.isPlaying)
+            }
         }.onFailure { throwable ->
             snackbarHostState.showSnackbar(throwable.message ?: "Unable to start playback")
             viewModel.onClosePlayback()

@@ -3,6 +3,7 @@ package com.haaz.ui.history
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.haaz.data.HistoryRepository
+import com.haaz.data.HistoryState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,10 +16,10 @@ import kotlinx.coroutines.launch
 class HistoryViewModel @Inject constructor(
     private val historyRepository: HistoryRepository
 ) : ViewModel() {
-    val history: StateFlow<List<String>> = historyRepository.history.stateIn(
+    val history: StateFlow<HistoryState> = historyRepository.history.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = emptyList()
+        initialValue = HistoryState()
     )
 
     private val _isClearing = MutableStateFlow(false)

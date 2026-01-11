@@ -52,8 +52,8 @@ class HomeViewModel @Inject constructor(
             _uiState.update { it.copy(isGenerating = true, errorMessage = null, playback = null) }
 
             val result = textToSpeechRepository.generateSpeech(prompt, _uiState.value.settings)
-            if (result.isSuccess) {
-                historyRepository.addEntry(prompt)
+            result.getOrNull()?.let { audio ->
+                historyRepository.addGeneratedClip(prompt, audio)
             }
             _uiState.update {
                 result.fold(
@@ -113,6 +113,27 @@ class HomeViewModel @Inject constructor(
 
     fun onHistorySelected(query: String) {
         _uiState.update { it.copy(promptText = query, errorMessage = null) }
+    }
+
+    fun onClipSelected(prompt: String, fileName: String) {
+        val file = historyRepository.getClipFile(fileName)
+        if (!file.exists()) {
+            _uiState.update {
+                it.copy(errorMessage = "Unable to find saved clip", playback = null)
+            }
+            return
+        }
+
+        _uiState.update {
+            it.copy(
+                promptText = prompt,
+                errorMessage = null,
+                playback = PlaybackState(
+                    audioFilePath = file.absolutePath,
+                    isPlaying = false
+                )
+            )
+        }
     }
 
     fun saveSettings(settings: TtsSettings) {
@@ -198,7 +219,8 @@ data class HomeUiState(
 }
 
 data class PlaybackState(
-    val audioData: ByteArray,
+    val audioData: ByteArray? = null,
+    val audioFilePath: String? = null,
     val title: String = "Generated audio",
     val isPlaying: Boolean = false
 )

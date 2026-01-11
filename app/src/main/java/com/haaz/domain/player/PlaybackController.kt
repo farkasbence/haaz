@@ -31,7 +31,7 @@ class PlaybackController(
     private val sessionToken = SessionToken(appContext, ComponentName(appContext, PlaybackService::class.java))
     private val controllerMutex = Mutex()
     private var controller: MediaController? = null
-    private var audioFile: File? = null
+    private var tempAudioFile: File? = null
     private var pendingPlayWhenReady: Boolean = false
 
     private val listener = object : Player.Listener {
@@ -54,11 +54,25 @@ class PlaybackController(
         val file = withContext(Dispatchers.IO) {
             val tempFile = File.createTempFile("haaz_tts_", ".mp3", appContext.cacheDir)
             tempFile.outputStream().use { output -> output.write(audioData) }
-            audioFile?.delete()
+            tempAudioFile?.delete()
             tempFile
         }
 
-        audioFile = file
+        tempAudioFile = file
+        val mediaController = getController()
+        mediaController.setMediaItem(MediaItem.fromUri(file.toUri()))
+        mediaController.prepare()
+        if (playWhenReady || pendingPlayWhenReady) {
+            pendingPlayWhenReady = true
+            mediaController.play()
+        } else {
+            mediaController.playWhenReady = false
+        }
+    }
+
+    suspend fun setAudioFile(file: File, playWhenReady: Boolean) {
+        tempAudioFile?.delete()
+        tempAudioFile = null
         val mediaController = getController()
         mediaController.setMediaItem(MediaItem.fromUri(file.toUri()))
         mediaController.prepare()
@@ -88,8 +102,8 @@ class PlaybackController(
             mediaController.stop()
             mediaController.clearMediaItems()
         }
-        audioFile?.delete()
-        audioFile = null
+        tempAudioFile?.delete()
+        tempAudioFile = null
     }
 
     fun release() {
