@@ -252,7 +252,7 @@ private fun HomePageUI(
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Image(
-                                painter = painterResource(id = R.drawable.speech_bubble),
+                                painter = painterResource(id = R.drawable.haaz_icon),
                                 contentDescription = null,
                                 modifier = Modifier.size(32.dp)
                             )
@@ -270,7 +270,7 @@ private fun HomePageUI(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {

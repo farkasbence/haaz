@@ -13,9 +13,9 @@
     <application
         android:name=".HaazApp"
         android:allowBackup="true"
-        android:icon="@drawable/speech_bubble"
+        android:icon="@drawable/haaz_icon"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/speech_bubble"
+        android:roundIcon="@drawable/haaz_icon"
         android:supportsRtl="true"
         android:theme="@style/Theme.Haaz">
         <activity
